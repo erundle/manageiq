@@ -43,13 +43,12 @@
                   </div>
                 </div>
                 <div class="form-group">
-                  <label class="control-label col-sm-4">Request State</label>
+                  <label class="control-label col-sm-4">Request Status</label>
                   <div class="col-sm-8">
                     <div class="ss-request-state">
                       <span class="spinner spinner-xs spinner-inline" ng-if="vm.request.request_state == 'pending'"></span>
                       <span class="pficon-error-circle-o" ng-if="vm.request.request_state == 'denied'"></span>
                       <span class="pficon-ok" ng-if="vm.request.request_state == 'approved'"></span>
-                      {{ ::item.request_state }}
                       {{ ::vm.request.request_state }}
                     </div>
                   </div>

@@ -32,7 +32,7 @@
   }
 
   /** @ngInject */
-  function StateController($state, requests) {
+  function StateController($state, requests, RequestsState) {
     var vm = this;
 
     vm.title = 'Request List';
@@ -44,13 +44,6 @@
       showSelectBox: false,
       selectionMatchProp: 'request_status',
       onClick: handleClick
-    };
-
-    var listState = {
-      sort: {
-        isAscending: false,
-        currentField: { id: 'requested', title: 'Requested Date', sortType: 'numeric' }
-      }
     };
 
     vm.toolbarConfig = {
@@ -77,7 +70,7 @@
           }
         ],
         resultsCount: vm.requestsList.length,
-        appliedFilters: [],
+        appliedFilters: RequestsState.getFilters(),
         onFilterChange: filterChange
       },
       sortConfig: {
@@ -104,24 +97,23 @@
           }
         ],
         onSortChange: sortChange,
-        isAscending: listState.sort.isAscending,
-        currentField: listState.sort.currentField
+        isAscending: RequestsState.getSort().isAscending,
+        currentField: RequestsState.getSort().currentField
       }
     };
 
-    /* Set the list sort state */
-    sortChange(listState.sort.currentField, listState.sort.isAscending);
+    /* Apply the filtering to the data list */
+    filterChange(RequestsState.getFilters());
 
     function handleClick(item, e) {
       $state.go('requests.details', {requestId: item.id});
     }
 
-    function sortChange(sortId, isAscending) {
+    function sortChange(sortId, direction) {
       vm.requestsList.sort(compareFn);
 
       /* Keep track of the current sorting state */
-      listState.sort.isAscending = isAscending;
-      listState.sort.currentField = sortId;
+      RequestsState.setSort(sortId, vm.toolbarConfig.sortConfig.isAscending);
     }
 
     function compareFn(item1, item2) {
@@ -153,9 +145,6 @@
 
       applyFilters(filters);
       vm.toolbarConfig.filterConfig.resultsCount = vm.requestsList.length;
-
-      /* Make sure sorting direction is maintained */
-      sortChange(listState.sort.currentField, listState.sort.isAscending);
     }
 
     function applyFilters(filters) {
@@ -165,6 +154,12 @@
       } else {
         vm.requestsList = vm.requests;
       }
+
+      /* Keep track of the current filtering state */
+      RequestsState.setFilters(filters);
+
+      /* Make sure sorting direction is maintained */
+      sortChange(RequestsState.getSort().currentField, RequestsState.getSort().isAscending);
 
       function filterChecker(item) {
         if (matchesFilters(item, filters)) {

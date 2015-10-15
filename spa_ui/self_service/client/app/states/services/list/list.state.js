@@ -32,7 +32,7 @@
   }
 
   /** @ngInject */
-  function StateController($state, services) {
+  function StateController($state, services, ServicesState) {
     /* jshint validthis: true */
     var vm = this;
 
@@ -45,13 +45,6 @@
       showSelectBox: false,
       selectionMatchProp: 'service_status',
       onClick: handleClick
-    };
-
-    var listState = {
-      sort: {
-        isAscending: true,
-        currentField: { id: 'name', title:  'Name', sortType: 'alpha' }
-      }
     };
 
     vm.toolbarConfig = {
@@ -77,7 +70,7 @@
           }
         ],
         resultsCount: vm.servicesList.length,
-        appliedFilters: [],
+        appliedFilters: ServicesState.getFilters(),
         onFilterChange: filterChange
       },
       sortConfig: {
@@ -104,13 +97,13 @@
           }
         ],
         onSortChange: sortChange,
-        isAscending: listState.sort.isAscending,
-        currentField: listState.sort.currentField
+        isAscending: ServicesState.getSort().isAscending,
+        currentField: ServicesState.getSort().currentField
       }
     };
 
-    /* Set the list sort state */
-    sortChange(listState.sort.currentField, listState.sort.isAscending);
+    /* Apply the filtering to the data list */
+    filterChange(ServicesState.getFilters());
 
     function handleClick(item, e) {
       $state.go('services.details', {serviceId: item.id});
@@ -120,8 +113,7 @@
       vm.servicesList.sort(compareFn);
 
       /* Keep track of the current sorting state */
-      listState.sort.isAscending = isAscending;
-      listState.sort.currentField = sortId;
+      ServicesState.setSort(sortId, vm.toolbarConfig.sortConfig.isAscending);
     }
     
     function compareFn(item1, item2) {
@@ -165,9 +157,6 @@
 
       applyFilters(filters);
       vm.toolbarConfig.filterConfig.resultsCount = vm.servicesList.length;
-
-      /* Make sure sorting direction is maintained */
-      sortChange(listState.sort.currentField, listState.sort.isAscending);
     }
 
     function applyFilters(filters) {
@@ -177,6 +166,12 @@
       } else {
         vm.servicesList = vm.services;
       }
+
+      /* Keep track of the current filtering state */
+      ServicesState.setFilters(filters);
+
+      /* Make sure sorting direction is maintained */
+      sortChange(ServicesState.getSort().currentField, ServicesState.getSort().isAscending);
 
       function filterChecker(item) {
         if (matchesFilters(item, filters)) {
